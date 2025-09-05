@@ -1,0 +1,59 @@
+import React, { useEffect, useRef, useState } from "react";
+
+export default function TranslatorApp() {
+  const [text, setText] = useState("");
+  const [translated, setTranslated] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const doTranslate = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("https://libretranslate.de/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ q: text, source: "en", target: "hi", format: "text" }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      setTranslated(data.translatedText || "");
+    } catch (e) {
+      setError(e.message || "Translation failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-2xl bg-white shadow rounded-2xl p-6">
+        <h1 className="text-2xl font-bold mb-4">English → Hindi Translator</h1>
+
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="Type or paste English text here…"
+          className="w-full h-32 p-3 border rounded-lg mb-4"
+        />
+
+        <button
+          onClick={doTranslate}
+          disabled={loading || !text.trim()}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+        >
+          {loading ? "Translating…" : "Translate"}
+        </button>
+
+        {error && <p className="text-red-600 mt-2">{error}</p>}
+
+        <textarea
+          readOnly
+          value={translated}
+          placeholder="अनुवाद यहाँ दिखेगा…"
+          className="w-full h-32 p-3 border rounded-lg mt-4 bg-gray-100"
+        />
+      </div>
+    </div>
+  );
+}
